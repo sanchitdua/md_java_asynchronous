@@ -1,6 +1,8 @@
 package metadata.crud;
 
 
+import java.util.*;
+
 import com.sforce.soap.metadata.AsyncRequestState;
 import com.sforce.soap.metadata.AsyncResult;
 import com.sforce.soap.metadata.CustomField;
@@ -9,28 +11,30 @@ import com.sforce.soap.metadata.DeploymentStatus;
 import com.sforce.soap.metadata.FieldType;
 import com.sforce.soap.metadata.Metadata;
 import com.sforce.soap.metadata.MetadataConnection;
+import com.sforce.soap.metadata.Picklist;
+import com.sforce.soap.metadata.PicklistValue;
 import com.sforce.soap.metadata.SharingModel;
 
-public class CreateRecordTypes {
+public class CreateFields {
 	
 	private MetadataConnection metadataConnection;
 
 	public static void main(String... str) throws Exception{
-		CreateRecordTypes cof = new CreateRecordTypes();
+		CreateFields cof = new CreateFields();
 		cof.runCreate();
 	}
 	
 	private void runCreate() throws Exception {
 		metadata.MetadataLoginUtil mUtil = new metadata.MetadataLoginUtil();
-		metadataConnection = mUtil.login("YOUR_USERNAME", "YOUR_PASSWORD"+"YOUR_SECURITY_TOKEN");
+		metadataConnection = mUtil.login("df14@force.com", "testing123"+"DgRyd4WDqUIQOQNTbrMl23PPz");
         System.out.println("After successfully loggin in ... ");
         // Custom objects and fields must have __c suffix in the full name.
         final String uniqueObjectName = "MyCustomObject__c";
         createCustomObjectSync(uniqueObjectName);
-    }
+    } // END private void runCreate() throws Exception
 	
 	private void createCustomObjectSync(final String uniqueName) throws Exception {
-        final String label = "My Custom Object";
+        final String label = "My Custom Object 1";
         CustomObject co = new CustomObject();
         co.setFullName(uniqueName);
         co.setDeploymentStatus(DeploymentStatus.Deployed);
@@ -47,7 +51,46 @@ public class CreateRecordTypes {
         nf.setFullName(uniqueName);
         co.setNameField(nf);
 
-        AsyncResult[] results = metadataConnection.create(new Metadata[] { co });
+        Set<String> fields = new HashSet<String>();
+		fields.add("City__c");
+		fields.add("ContactNo__c");
+		fields.add("Email_Id__c");
+		fields.add("Last_Name__c");
+
+		
+		List<CustomField> cfList = new ArrayList<CustomField>();
+		
+		for(String field: fields) {
+			CustomField cf = new CustomField();
+			cf.setType(FieldType.Text);
+			cf.setLength(255);
+			cf.setFullName("MyCustomObject__c."+field);
+			cf.setLabel(field.replaceAll("__c", ""));
+			cfList.add(cf);
+		}
+		
+		Picklist myPickList = new Picklist();
+		PicklistValue unsubmitted = new PicklistValue();
+		unsubmitted.setFullName("Unsubmitted");
+		PicklistValue submitted = new PicklistValue();
+		submitted.setFullName("Submitted");
+		PicklistValue approved = new PicklistValue();
+		approved.setFullName("Approved");
+		PicklistValue rejected = new PicklistValue();
+		rejected.setFullName("Rejected");
+		myPickList.setPicklistValues(new PicklistValue[] {
+				unsubmitted, submitted, approved, rejected}
+				);
+
+		CustomField myPickListField = new CustomField();
+		myPickListField.setFullName(
+				"MyCustomObject.PickListField__c"
+				);
+		myPickListField.setLabel("Expense Report Status");
+		myPickListField.setType(FieldType.Picklist);
+		myPickListField.setPicklist(myPickList);
+		cfList.add(myPickListField);
+        AsyncResult[] results = metadataConnection.create(cfList.toArray(new Metadata[cfList.size()]));
         System.out.println("After issuing the create command.");
         final long ONE_SECOND = 1000;
 		final int MAX_NUM_POLL_REQUESTS = 25;
@@ -72,9 +115,9 @@ public class CreateRecordTypes {
 						+ asyncResult.getMessage());
 			} else {
 				System.out
-				.println("The object is successfully created.");
+				.println("The fields is successfully created.");
 			}
 		}
-    }
+    } // END private void createCustomObjectSync(final String uniqueName) throws Exception
 	
 }

@@ -591,6 +591,7 @@ public class Utility {
 			pr.setFullName(""+profileFullName);
 			ut.setMetadata(pr);
 
+			
 			// Updating the Profile for setting the RecordTypeVisiblity
 			AsyncResult[] ars = mConnection.update(new UpdateMetadata[]  
 					{ ut }); /////////////// <------- UPDATE Metadata Call on "Profile"
@@ -626,8 +627,8 @@ public class Utility {
 			updateMetadata.setMetadata(customObject);
 
 			// Refreshing the Custom Object on which the Record type has been created.
-			ars = mConnection.update(new UpdateMetadata[] 
-					{ updateMetadata }); //////////////// <---------- UPDATE Metadata Call on "CustomObject"
+//			ars = mConnection.update(new UpdateMetadata[] 
+//					{ updateMetadata }); //////////////// <---------- UPDATE Metadata Call on "CustomObject"
 
 			if(ars==null)
 				return;

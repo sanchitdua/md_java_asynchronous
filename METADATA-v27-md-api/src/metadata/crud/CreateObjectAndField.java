@@ -22,7 +22,7 @@ public class CreateObjectAndField {
 	
 	private void runCreate() throws Exception {
 		metadata.MetadataLoginUtil mUtil = new metadata.MetadataLoginUtil();
-		metadataConnection = mUtil.login("YOUR_USERNAME", "YOUR_PASSWORD"+"YOUR_SECURITY_TOKEN");
+		metadataConnection = mUtil.login("df14@force.com", "testing123"+"DgRyd4WDqUIQOQNTbrMl23PPz");
         System.out.println("After successfully loggin in ... ");
         // Custom objects and fields must have __c suffix in the full name.
         final String uniqueObjectName = "MyCustomObject__c";
@@ -30,7 +30,7 @@ public class CreateObjectAndField {
     } // END private void runCreate() throws Exception
 	
 	private void createCustomObjectSync(final String uniqueName) throws Exception {
-        final String label = "My Custom Object 2";
+        final String label = "My Custom Object 1";
         CustomObject co = new CustomObject();
         co.setFullName(uniqueName);
         co.setDeploymentStatus(DeploymentStatus.Deployed);

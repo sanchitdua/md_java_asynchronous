@@ -24,7 +24,7 @@ import com.sforce.soap.metadata.MetadataConnection;
 import com.sforce.soap.metadata.UpdateMetadata;
 import com.sforce.soap.partner.PartnerConnection;
 
-public class RetrieveTest {
+public class CreatingRecordTypesTest {
 
 	public static void main(String[] args) throws Exception{
 		Set<String> objs = new HashSet<String>();
@@ -32,8 +32,8 @@ public class RetrieveTest {
 		objs.add("MyCustomObject2__c");
 		RetrieveCallForSharingModel.retrieveSharingInfo();
 		metadata.MetadataLoginUtil mUtil = new metadata.MetadataLoginUtil();
-		MetadataConnection mConnection = mUtil.login("YOUR_USERNAME", "YOUR_PASSWORD"+"YOUR_SECURITY_TOKEN");
-		PartnerConnection p = new PartnerLoginUtil().login("YOUR_USERNAME", "YOUR_PASSWORD"+"YOUR_SECURITY_TOKEN");
+		MetadataConnection mConnection = mUtil.login("df14@force.com", "testing123"+"DgRyd4WDqUIQOQNTbrMl23PPz");
+		PartnerConnection p = new PartnerLoginUtil().login("df14@force.com", "testing123"+"DgRyd4WDqUIQOQNTbrMl23PPz");
 		System.out
 		.println("Retrieving the zipped archive of sObjects ...");
 		File f = new File("Temp/mypackage.zip");
@@ -97,7 +97,7 @@ public class RetrieveTest {
 				}
 				asyncResult = mConnection
 						.checkStatus(new String[] { asyncResult.getId() })[0];
-				System.out.println("Status for object creation "+ar.getId()+" is: "
+				System.out.println("Status for object updation "+ar.getId()+" is: "
 						+ asyncResult.getState());
 			}
 			if (asyncResult.getState() != AsyncRequestState.Completed) {

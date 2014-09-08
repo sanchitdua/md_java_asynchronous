@@ -22,24 +22,24 @@ public class UpdateObjectAndField {
 	
 	private void runCreate() throws Exception {
 		metadata.MetadataLoginUtil mUtil = new metadata.MetadataLoginUtil();
-		metadataConnection = mUtil.login("YOUR_USERNAME", "YOUR_PASSWORD"+"YOUR_SECURITY_TOKEN");
-//        metadataConnection = MetadataLoginUtil.login();
+		metadataConnection = mUtil.login("df14@force.com", "testing123"+"DgRyd4WDqUIQOQNTbrMl23PPz");
         System.out.println("After successfully loggin in ... ");
         // Custom objects and fields must have __c suffix in the full name.
         final String uniqueObjectName = "MyCustomObject__c";
         createCustomObjectSync(uniqueObjectName);
     }
 	
+	// Method for updating an already created object named MyCustomObject__c
 	private void createCustomObjectSync(final String uniqueName) throws Exception {
-        final String label = "My Custom Object 4";
+        final String label = "My Custom Object";
         CustomObject co = new CustomObject();
         co.setFullName(uniqueName);
         co.setDeploymentStatus(DeploymentStatus.Deployed);
-        co.setDescription("Updated by Sanchit");
+        co.setDescription("Updated by Java");
         co.setEnableActivities(true);
         co.setLabel(label);
         co.setPluralLabel(label + "s");
-        co.setSharingModel(SharingModel.Private);
+        co.setSharingModel(SharingModel.FullAccess);
         
         // The name field appears in page layouts, related lists, and elsewhere.
         CustomField nf = new CustomField();
@@ -51,7 +51,7 @@ public class UpdateObjectAndField {
         UpdateMetadata um = new UpdateMetadata();
         um.setMetadata(co);
         AsyncResult[] results = metadataConnection.update(new UpdateMetadata[] { um });
-        System.out.println("After issuing the create command.");
+        System.out.println("After issuing the udpate command.");
         final long ONE_SECOND = 1000;
 		final int MAX_NUM_POLL_REQUESTS = 25;
 		int poll = 0;
@@ -75,7 +75,7 @@ public class UpdateObjectAndField {
 						+ asyncResult.getMessage());
 			} else {
 				System.out
-				.println("The object is successfully created.");
+				.println("The object is successfully udpated.");
 			}
 		}
     }
