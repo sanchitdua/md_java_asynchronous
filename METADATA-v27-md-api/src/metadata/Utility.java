@@ -474,13 +474,12 @@ public class Utility {
 
 
 	/**
-	 * @param objectName
 	 * @param recordTypes
 	 * @param isDefault
+	 * @param isTest TODO
+	 * @param objectName
 	 */
-	public static void createRecordTypes (CustomObject customObject, Set<String> recordTypes, boolean isDefault, MetadataConnection mConnection, PartnerConnection pConnection){
-
-		//		boolean returnVal = false;
+	public static void createRecordTypes (CustomObject customObject, Set<String> recordTypes, boolean isDefault, MetadataConnection mConnection, PartnerConnection pConnection, boolean isTest){
 
 		try{
 			if(customObject==null)
@@ -547,44 +546,44 @@ public class Utility {
 			Profile pr = new Profile();
 			pr.setRecordTypeVisibilities(prtv); // <-- Assigning the Record Type visiblities from above
 			AsyncResult[] asyncResultsupdate = null;
-			if(mConnection != null)
-				asyncResultsupdate = mConnection.create(rType);   ////////////////// <---- CREATE Metadata Call on "RecordType"
-
-			AsyncResult asyncResult = asyncResultsupdate[0];
-
 			final long ONE_SECOND = 1000;
 			final int MAX_NUM_POLL_REQUESTS = 3;
 			int poll = 0;
 			long waitTimeMilliSecs = ONE_SECOND;
 
 			int countRTs = 0;
-
-			while (!asyncResult.isDone()) {
-				Thread.sleep(waitTimeMilliSecs);
-				waitTimeMilliSecs *= 2;
-				if (poll++ > MAX_NUM_POLL_REQUESTS) {
-					throw new Exception("Request timed out. If this is a large set of metadata components, check that the time allowed by MAX_NUM_POLL_REQUESTS is sufficient.");
+			if(mConnection != null)
+				if(!isTest){
+				asyncResultsupdate = mConnection.create(rType);   ////////////////// <---- CREATE Metadata Call on "RecordType"
+				AsyncResult asyncResult = asyncResultsupdate[0];
+				
+	
+				while (!asyncResult.isDone()) {
+					Thread.sleep(waitTimeMilliSecs);
+					waitTimeMilliSecs *= 2;
+					if (poll++ > MAX_NUM_POLL_REQUESTS) {
+						throw new Exception("Request timed out. If this is a large set of metadata components, check that the time allowed by MAX_NUM_POLL_REQUESTS is sufficient.");
+					}
+					asyncResult = mConnection.checkStatus(new String[] {asyncResult.getId()})[0];
+					System.out.println("\t\tStatus for Record Types is: " + asyncResult.getState());
 				}
-				asyncResult = mConnection.checkStatus(new String[] {asyncResult.getId()})[0];
-				System.out.println("\t\tStatus for Record Types is: " + asyncResult.getState());
-			}
-			if (asyncResult.getState() != AsyncRequestState.Completed) {        	
-				//				System.out.println(asyncResult.getStatusCode() + " msg: " +	asyncResult.getMessage());
-				if(asyncResult.getStatusCode() == StatusCode.DUPLICATE_VALUE) {
-					System.out.println("ERROR: The Record Type you specified already exists.");
-					countRTs++;
+				if (asyncResult.getState() != AsyncRequestState.Completed) {        	
+					//				System.out.println(asyncResult.getStatusCode() + " msg: " +	asyncResult.getMessage());
+					if(asyncResult.getStatusCode() == StatusCode.DUPLICATE_VALUE) {
+						System.out.println("ERROR: The Record Type you specified already exists.");
+						countRTs++;
+					}
+	
 				}
-
+				else{
+					System.out.println("\tThe Record Types created successfully for the sObject: "+customObject.getFullName());
+				}
+	
+				if(countRTs==recordTypes.size()){
+					System.out.println("No Record Types to update for the Object: "+customObject.getFullName());
+					return;
+				}
 			}
-			else{
-				System.out.println("\tThe Record Types created successfully for the sObject: "+customObject.getFullName());
-			}
-
-			if(countRTs==recordTypes.size()){
-				System.out.println("No Record Types to update for the Object: "+customObject.getFullName());
-				return;
-			}
-
 			System.out.println("\n\tUpdating the Current User's profile to the get the Reocord Types Visible ...");
 
 			UpdateMetadata ut = new UpdateMetadata();
@@ -593,34 +592,35 @@ public class Utility {
 
 			
 			// Updating the Profile for setting the RecordTypeVisiblity
-			AsyncResult[] ars = mConnection.update(new UpdateMetadata[]  
-					{ ut }); /////////////// <------- UPDATE Metadata Call on "Profile"
-
-			AsyncResult asyncResultt = ars[0];
-			// set initial wait time to one second in milliseconds
-			waitTimeMilliSecs = 1000;
-			while (!asyncResultt.isDone()) {
-				Thread.sleep(waitTimeMilliSecs);
-				// double the wait time for the next iteration
-				waitTimeMilliSecs *= 2;
-				asyncResultt = mConnection.checkStatus(
-						new String[] {asyncResultt.getId()})[0];
-				System.out.println("\t\tStatus is: " + asyncResultt.getState());
+			AsyncResult[] ars =null;
+			AsyncResult asyncResultt = null;
+			if(!isTest){
+				ars = mConnection.update(new UpdateMetadata[] { ut }); /////////////// <------- UPDATE Metadata Call on "Profile"
+				asyncResultt = ars[0];
+				// set initial wait time to one second in milliseconds
+				waitTimeMilliSecs = 1000;
+				while (!asyncResultt.isDone()) {
+					Thread.sleep(waitTimeMilliSecs);
+					// double the wait time for the next iteration
+					waitTimeMilliSecs *= 2;
+					asyncResultt = mConnection.checkStatus(
+							new String[] {asyncResultt.getId()})[0];
+					System.out.println("\t\tStatus is: " + asyncResultt.getState());
+				}
+	
+				if (asyncResultt.getState() != AsyncRequestState.Completed) {
+					System.out.println(asyncResultt.getStatusCode() + " msg: " +
+							asyncResultt.getMessage());
+	
+					//				DUPLICATE_VALUE msg: The label:adlt on record type:MyCustomObject2__c.adlt is not unique
+	
+	
+	
+				}
+				else{
+					System.out.println("\tThe Profile is Updated successfully for the sObject: "+customObject.getFullName());
+				}
 			}
-
-			if (asyncResultt.getState() != AsyncRequestState.Completed) {
-				System.out.println(asyncResultt.getStatusCode() + " msg: " +
-						asyncResultt.getMessage());
-
-				//				DUPLICATE_VALUE msg: The label:adlt on record type:MyCustomObject2__c.adlt is not unique
-
-
-
-			}
-			else{
-				System.out.println("\tThe Profile is Updated successfully for the sObject: "+customObject.getFullName());
-			}
-
 
 
 			UpdateMetadata updateMetadata = new UpdateMetadata();
@@ -669,18 +669,14 @@ public class Utility {
 	 * @param f
 	 * @param isNameAutoNumber
 	 * @param pConnection
+	 * @param isTest TODO
 	 */
-	public static void updateLayout(MetadataConnection mConnection, String[] recordTypeTest, String sObjName, String secName, Set<String> f, boolean isNameAutoNumber, PartnerConnection pConnection){
+	public static void updateLayout(MetadataConnection mConnection, String[] recordTypeTest, String sObjName, String secName, Set<String> f, boolean isNameAutoNumber, PartnerConnection pConnection, boolean isTest){
 		try{
 			if(f!= null){
 				boolean nameSet = false;
-				boolean hit = false;
 				com.sforce.soap.partner.DescribeSObjectResult[] dsrArray = null;
-
-				boolean isNameDone = false;
 				boolean isNameAuto = false;
-				Set<String> masters = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
-
 				if(pConnection != null)
 					dsrArray = pConnection.describeSObjects(new String[] { sObjName }); // lablename, apiname, all of the child components as well / listMetadata ==> Type :: 
 
@@ -845,7 +841,6 @@ public class Utility {
 							existingFields.clear();
 
 							isChecked = true;
-							hit = true;
 							if(!fields.contains("Name")){
 								List<LayoutItem> leftLayoutItemsList = new ArrayList<LayoutItem>();
 								List<LayoutItem> rightLayoutItemsList = new ArrayList<LayoutItem>();
@@ -974,36 +969,38 @@ public class Utility {
 				UpdateMetadata ut = new UpdateMetadata();
 				ut.setCurrentName(""+layoutName);
 				ut.setMetadata(lay1);
-				AsyncResult[] asyncResultsupdate = mConnection.update(new UpdateMetadata[] {ut});  
-
-				AsyncResult asyncResult = asyncResultsupdate[0];
-				final long ONE_SECOND = 1000;
-				final int MAX_NUM_POLL_REQUESTS = 50;
-				int poll = 0;
-				long waitTimeMilliSecs = ONE_SECOND;
-
-				while (!asyncResult.isDone()) {
-					Thread.sleep(waitTimeMilliSecs);
-					waitTimeMilliSecs *= 2;
-					if (poll++ > MAX_NUM_POLL_REQUESTS) {
-						throw new Exception("Request timed out. If this is a large set of metadata components, check that the time allowed by MAX_NUM_POLL_REQUESTS is sufficient.");
+				AsyncResult[] asyncResultsupdate =null;
+				if(!isTest){
+					asyncResultsupdate = mConnection.update(new UpdateMetadata[] {ut});  
+					AsyncResult asyncResult = asyncResultsupdate[0];
+					final long ONE_SECOND = 1000;
+					final int MAX_NUM_POLL_REQUESTS = 50;
+					int poll = 0;
+					long waitTimeMilliSecs = ONE_SECOND;
+	
+					while (!asyncResult.isDone()) {
+						Thread.sleep(waitTimeMilliSecs);
+						waitTimeMilliSecs *= 2;
+						if (poll++ > MAX_NUM_POLL_REQUESTS) {
+							throw new Exception("Request timed out. If this is a large set of metadata components, check that the time allowed by MAX_NUM_POLL_REQUESTS is sufficient.");
+						}
+						asyncResult = mConnection.checkStatus(new String[] {asyncResult.getId()})[0];
+						System.out.println("Status for Pagelayout is: " + asyncResult.getState());
 					}
-					asyncResult = mConnection.checkStatus(new String[] {asyncResult.getId()})[0];
-					System.out.println("Status for Pagelayout is: " + asyncResult.getState());
+					if (asyncResult.getState() != AsyncRequestState.Completed) {        	
+						System.out.println(asyncResult.getStatusCode() + " msg: " +	asyncResult.getMessage());
+						
+					}
+					else{
+						System.out.println("The Page Layout for sObject \'"+""+sObjName+"\' has been Updated.");
+						System.out.println("The further information is: "+asyncResult.getId());
+					}
+	
+					dsrArray = null;
+					fields.clear();
+					fields = null;
+					dlResult = null;
 				}
-				if (asyncResult.getState() != AsyncRequestState.Completed) {        	
-					System.out.println(asyncResult.getStatusCode() + " msg: " +	asyncResult.getMessage());
-					
-				}
-				else{
-					System.out.println("The Page Layout for sObject \'"+""+sObjName+"\' has been Updated.");
-					System.out.println("The further information is: "+asyncResult.getId());
-				}
-
-				dsrArray = null;
-				fields.clear();
-				fields = null;
-				dlResult = null;
 			}
 
 		}catch(Exception ex){
